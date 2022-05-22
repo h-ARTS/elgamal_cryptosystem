@@ -4,20 +4,28 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class Elgamal {
-    public static final BigInteger n = new BigInteger("FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E088A67CC74020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7EDEE386BFB5A899FA5AE9F24117C4B1FE649286651ECE45B3DC2007CB8A163BF0598DA48361C55D39A69163FA8FD24CF5F83655D23DCA3AD961C62F356208552BB9ED529077096966D670C354E4ABC9804F1746C08CA18217C32905E462E36CE3BE39E772C180E86039B2783A2EC07A28FB5C55DF06F4C52C9DE2BCBF6955817183995497CEA956AE515D2261898FA051015728E5A8AACAA68FFFFFFFFFFFFFFFF", 16);
+    public static final BigInteger N = new BigInteger("FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E088A67CC74020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7EDEE386BFB5A899FA5AE9F24117C4B1FE649286651ECE45B3DC2007CB8A163BF0598DA48361C55D39A69163FA8FD24CF5F83655D23DCA3AD961C62F356208552BB9ED529077096966D670C354E4ABC9804F1746C08CA18217C32905E462E36CE3BE39E772C180E86039B2783A2EC07A28FB5C55DF06F4C52C9DE2BCBF6955817183995497CEA956AE515D2261898FA051015728E5A8AACAA68FFFFFFFFFFFFFFFF", 16);
+    public static final BigInteger GENERATOR = BigInteger.TWO;
     public static BigInteger a;
     public static BigInteger b;
     public static BigInteger g_b;
-    public static final BigInteger g = BigInteger.TWO;
 
     public static void main(String[] args) throws IOException {
-        encryptText("src/text.txt");
+        /*
+        * Uncomment codes down below for encryption/decryption of text.
+        * */
+//        encryptText("src/text.txt");
+        System.out.println(decryptCipherText("output/cipher.txt", "output/sk.txt"));
+//        BigInteger THREE = new BigInteger("3");
+//        BigInteger M = new BigInteger("38");
+//        System.out.println(THREE.pow(THREE.intValue()).modInverse(M));
+//        System.out.println((BigInteger.valueOf(6).multiply(fastExponentiation(BigInteger.valueOf(4), BigInteger.valueOf(3), BigInteger.valueOf(13)))).mod(BigInteger.valueOf(13)));
     }
 
     public static void generateKeyPairs() throws IOException {
-        b = nextRandom();
-        a = nextRandom();
-        g_b = g.modPow(b, n);
+        setB(nextRandom());
+        setA(nextRandom());
+        setG_b(GENERATOR.modPow(b, N));
         saveKeyPairs();
     }
 
@@ -26,73 +34,21 @@ public class Elgamal {
         * Randomly generate a BigInteger with bit length of 2048.
         * When less than 0 then correct it.
         * */
-        BigInteger max = n.subtract(BigInteger.ONE);
+        BigInteger max = N.subtract(BigInteger.ONE);
         BigInteger min = BigInteger.ZERO;
         Random randNum = new Random();
-        int len = n.bitLength();
+        int len = N.bitLength();
         BigInteger randB = new BigInteger(len, randNum);
         return randB.compareTo(min) < 0 ? randB.add(min) : randB.mod(max);
     }
-    /*
-    * Extended euclidean algorithm reused from assignment 1
-    * */
-    public static BigInteger extendedEuclidean(BigInteger phiOfN, BigInteger chosenE) {
-        /*
-         * Get phi of n and set this to equals an
-         * e will be equals b
-         * init x_0 = 1, y_0 = 0, x_1 = 0, y_1 = 1
-         */
-        BigInteger a = phiOfN;
-        BigInteger b = chosenE;
-        BigInteger q; // div
-        BigInteger r; // mod
-        BigInteger temp; // For not skipping values...
-        BigInteger x_0 = BigInteger.ONE,
-                y_0 = BigInteger.ZERO,
-                x_1 = BigInteger.ZERO,
-                y_1 = BigInteger.ONE;
-
-        while (!b.equals(BigInteger.ZERO)) {
-            q = a.divide(b);
-            r = a.mod(b);
-
-            a = b;
-            b = r;
-
-            /*
-             * The temp is for storing the x_1 value temporary,
-             * so you do not use the overwritten x_1 as seen below
-             */
-            temp = x_1;
-            x_1 = x_0.subtract(q.multiply(x_1));
-            x_0 = temp;
-
-            // Same goes to y_1
-            temp = y_1;
-            y_1 = y_0.subtract(q.multiply(y_1));
-            y_0 = temp;
-        }
-
-        // If y_0 is positive ? e = y_0 or e = y_0 + phi(n) if y_0 negative
-        if (y_0.intValue() < 0) {
-//            setD(y_0.add(phiOfN));
-        } else {
-//            setD(y_0);
-        }
-
-        // According to 1.27: x_0 * a + b * y_0
-        return x_0.multiply(phiOfN).add(y_0.multiply(chosenE));
-    }
-
 
     /*
      * The fast exponentiation algorithm reused from assignment 1
      */
-    private static BigInteger fastExponentiation(BigInteger _k, BigInteger _e, BigInteger _n) {
+    private static BigInteger fastExponentiation(BigInteger k, BigInteger e, BigInteger n) {
         BigInteger h = BigInteger.ONE;
-        BigInteger k = _k;
 
-        String binaryString = _e.toString(2);
+        String binaryString = e.toString(2);
         // Deduct 1 otherwise out of range
         int l = Arrays.asList(binaryString.split("")).size()-1;
 
@@ -100,9 +56,9 @@ public class Elgamal {
 
         while (l >= 0) {
             if (binaries.get(l).equals("1"))
-                h = h.multiply(k).mod(_n);
+                h = h.multiply(k).mod(n);
 
-            k = k.pow(2).mod(_n);
+            k = k.pow(2).mod(n);
             l--;
         }
 
@@ -125,7 +81,9 @@ public class Elgamal {
         return charsString.stream().map(c -> c.charAt(0)).toList();
     }
 
-
+    /*
+    * Save key pairs in their respective files.
+    * */
     private static void saveKeyPairs() throws IOException {
         FileWriter publicKeyFile = new FileWriter("output/pk.txt");
         FileWriter privateKeyFile = new FileWriter("output/sk.txt");
@@ -140,6 +98,9 @@ public class Elgamal {
         privateKeyWriter.close();
     }
 
+    /*
+    * Transform into cipher text by using the elgamal encryption formula from slide 2.27
+    * */
     public static void encryptText(String pathname) throws IOException {
         generateKeyPairs();
         List<Character> chars = getListOfCharCodesFromFile(pathname);
@@ -147,11 +108,12 @@ public class Elgamal {
         chars.stream()
                 .map(character -> BigInteger.valueOf((long)character))
                 .forEach((ascii) -> {
-            BigInteger y_1 = g.modPow(a, n);
-            BigInteger y_2 = g_b.modPow(a, n).multiply(ascii).mod(n);
+            BigInteger y_1 = GENERATOR.modPow(a, N);
+            BigInteger y_2 = (g_b.modPow(a, N).multiply(ascii).mod(N)).mod(N);
             encryptions.add("(" + y_1 + "," + y_2 + ");");
         });
 
+        // For eliminating the last semicolon.
         StringBuffer cipherBuffer = new StringBuffer(encryptions.stream()
                 .map(String::toString)
                 .collect(Collectors.joining()));
@@ -162,22 +124,19 @@ public class Elgamal {
         saveTextInFile(cipher, "output/cipher.txt");
     }
 
+    /*
+    * Decrypt cipher text and save in a file.
+    * */
     public static String decryptCipherText(String pathNameToCipher, String pathNameToPrivateKey) throws IOException {
         String cipherText = loadTextFile(pathNameToCipher);
-        String privateKeyText = loadTextFile(pathNameToPrivateKey);
+        String privateKey = loadTextFile(pathNameToPrivateKey);
 
-        List<String> keyPair = Arrays.asList(privateKeyText.split("[,]", 0));
-        // Replace parens with empty space
-        keyPair.replaceAll(s -> s.replaceAll("[()]", ""));
-        BigInteger _n = new BigInteger(keyPair.get(0)); // n
-        BigInteger _d = new BigInteger(keyPair.get(1)); // d
-
-        // split by comma, decipher with fast exponentiation and store in a list
-        List<String> listCiphers = Arrays.stream(cipherText.split("[,]")).toList();
-        List<BigInteger> asciiCodes = listCiphers.stream()
-                .map(BigInteger::new)
-                .map(cipherBigInt -> fastExponentiation(cipherBigInt, _d, _n))
-                .toList();
+        // Split by semicolon to loop over the encrypted cipher.
+        List<String> keyPairs = Arrays.asList(cipherText.split("[;]", 0));
+        List<BigInteger> asciiCodes = new ArrayList<>();
+        keyPairs.forEach(keyPair -> {
+            asciiCodes.add(decryptAscii(keyPair, privateKey));
+        });
 
         // The juicy part were you press the ascii codes into real characters and store it as a string
         String plainText = asciiCodes.stream()
@@ -185,9 +144,26 @@ public class Elgamal {
                 .map(Character::toString)
                 .collect(Collectors.joining());
 
-        saveTextInFile(plainText, "text-d.txt");
+        saveTextInFile(plainText, "output/text-d.txt");
 
         return plainText;
+    }
+
+    /*
+    * Transform into ascii code by using the elgamal decryption formula from slide 2.27
+    * */
+    private static BigInteger decryptAscii(String keyPair, String privateKey) {
+        // Replace parens with empty space
+        List<String> keyPairString = List.of(keyPair.replaceAll("[()]", "").split(","));
+        BigInteger y_1 = new BigInteger(keyPairString.get(0));
+        BigInteger y_2 = new BigInteger(keyPairString.get(1));
+
+        // Decrypt y_1 and y_2 with fast exponentiation.
+        BigInteger y_1_power_b = fastExponentiation(y_1, new BigInteger(privateKey), N);
+        BigInteger y_1_inverse = y_1_power_b.modInverse(N);
+        BigInteger output = y_2.multiply(y_1_inverse).mod(N);
+
+        return output;
     }
 
     private static void saveTextInFile(String rawText, String filename) throws IOException {
@@ -206,12 +182,16 @@ public class Elgamal {
         return reader.readLine();
     }
 
-    /* Getters and setters */
-    public static BigInteger getB() {
-        return b;
-    }
-
+    /* Setters */
     public static void setB(BigInteger b) {
         Elgamal.b = b;
+    }
+
+    public static void setA(BigInteger a) {
+        Elgamal.a = a;
+    }
+
+    public static void setG_b(BigInteger g_b) {
+        Elgamal.g_b = g_b;
     }
 }
