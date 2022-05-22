@@ -15,7 +15,7 @@ public class Elgamal {
         * Uncomment codes down below for encryption/decryption of text.
         * */
 //        encryptText("src/text.txt");
-        System.out.println(decryptCipherText("output/cipher.txt", "output/sk.txt"));
+        System.out.println(decryptCipherText("src/chiffre.txt", "src/sk.txt"));
 //        BigInteger THREE = new BigInteger("3");
 //        BigInteger M = new BigInteger("38");
 //        System.out.println(THREE.pow(THREE.intValue()).modInverse(M));
@@ -144,7 +144,7 @@ public class Elgamal {
                 .map(Character::toString)
                 .collect(Collectors.joining());
 
-        saveTextInFile(plainText, "output/text-d.txt");
+        saveTextInFile(plainText, "src/text-d.txt");
 
         return plainText;
     }
