@@ -1,8 +1,6 @@
 import java.io.*;
 import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Elgamal {
@@ -13,7 +11,7 @@ public class Elgamal {
     public static final BigInteger g = BigInteger.TWO;
 
     public static void main(String[] args) throws IOException {
-        generateKeyPairs();
+        encryptText("src/text.txt");
     }
 
     public static void generateKeyPairs() throws IOException {
@@ -140,6 +138,28 @@ public class Elgamal {
 
         publicKeyWriter.close();
         privateKeyWriter.close();
+    }
+
+    public static void encryptText(String pathname) throws IOException {
+        generateKeyPairs();
+        List<Character> chars = getListOfCharCodesFromFile(pathname);
+        List<String> encryptions = new ArrayList<>();
+        chars.stream()
+                .map(character -> BigInteger.valueOf((long)character))
+                .forEach((ascii) -> {
+            BigInteger y_1 = g.modPow(a, n);
+            BigInteger y_2 = g_b.modPow(a, n).multiply(ascii).mod(n);
+            encryptions.add("(" + y_1 + "," + y_2 + ");");
+        });
+
+        StringBuffer cipherBuffer = new StringBuffer(encryptions.stream()
+                .map(String::toString)
+                .collect(Collectors.joining()));
+        cipherBuffer.deleteCharAt(cipherBuffer.length()-1);
+
+        String cipher = cipherBuffer.toString();
+
+        saveTextInFile(cipher, "output/cipher.txt");
     }
 
     public static String decryptCipherText(String pathNameToCipher, String pathNameToPrivateKey) throws IOException {
